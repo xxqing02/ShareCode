@@ -4,6 +4,7 @@ from key import api_key, base
 from prompt import chatbot_prompt
 
 from execute_query import execute_query_direct  # 你之前写的数据库查询方法
+from file_importer import import_excel_to_mysql
 
 # 初始化 OpenAI 客户端
 client = openai.OpenAI(api_key=api_key, base_url=base)
@@ -52,11 +53,16 @@ def natural_language_query(nl_query):
     else:
         return sql_suggestion, "⚠️ 没有查询到数据或执行失败！"
 
-# Gradio 页面设计
+def handle_file_upload(file):
+    if file is None:
+        return "⚠️ 请先上传文件"
+    return import_excel_to_mysql(file.name)
+
 with gr.Blocks(title="自然语言 SQL 查询系统") as demo:
     gr.Markdown("# 📝 自然语言数据库查询助手")
-    gr.Markdown("### 输入自然语言查询需求，系统自动生成 SQL 并查询数据库")
+    gr.Markdown("### 输入自然语言查询需求，系统自动生成 SQL 并查询数据库\n### 或上传 Excel 文件导入数据库")
 
+    # 自然语言查询模块
     with gr.Row():
         nl_input = gr.Textbox(label="自然语言查询", placeholder="例如：查询所有管理员的用户名")
         search_btn = gr.Button("🔍 查询")
@@ -67,5 +73,16 @@ with gr.Blocks(title="自然语言 SQL 查询系统") as demo:
 
     search_btn.click(fn=natural_language_query, inputs=[nl_input], outputs=[sql_output, query_result_output])
 
-# 启动 Gradio 服务
+    gr.Markdown("---")
+
+    # Excel导入模块
+    gr.Markdown("### 📥 Excel 文件上传导入数据库")
+    with gr.Row():
+        file_input = gr.File(label="📤 上传 Excel 文件", file_types=[".xlsx", ".xls"])
+        upload_btn = gr.Button("🚀 导入到数据库")
+
+    upload_result_output = gr.Textbox(label="导入结果", lines=2)
+    upload_btn.click(fn=handle_file_upload, inputs=[file_input], outputs=[upload_result_output])
+
 demo.launch(server_name="0.0.0.0", server_port=7860)
+
