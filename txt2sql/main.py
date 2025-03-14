@@ -23,12 +23,12 @@ if __name__ == "__main__":
         gr.Markdown("---")
         gr.Markdown("### 📥 Excel 文件上传导入数据库")
         with gr.Row():
-            file_input = gr.File(label="📤 上传 Excel 文件", file_types=[".xlsx", ".xls"])
+            file_input = gr.File(label="📤 上传 Excel 文件", file_types=[".xlsx", ".xls"], file_count="multiple")
             upload_btn = gr.Button("🚀 导入到数据库")
 
         upload_result_output = gr.Textbox(label="导入结果", lines=2)
         upload_btn.click(
-            fn=lambda f: importer.import_excel_to_mysql(f.name),  # <<< 取临时文件路径
+            fn=lambda files: importer.import_multiple_excels_to_mysql([file.name for file in files]),
             inputs=[file_input],
             outputs=[upload_result_output]
         )
