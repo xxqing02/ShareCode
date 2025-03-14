@@ -1,1 +1,2 @@
-./txt2sql/key.py
+/txt2sql/key.py
+/txt2sql/__pycache__/
