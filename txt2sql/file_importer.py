@@ -16,7 +16,7 @@ class file_importer:
         
     def import_excel_to_mysql(self, file_path):
         try:
-            print(file_path,'path')
+            print(file_path,'')
             xls = pd.ExcelFile(file_path)
             sheets = xls.sheet_names
             print(f"📄 发现 {len(sheets)} 个 sheet：{sheets}")
@@ -45,10 +45,6 @@ class file_importer:
             cursor.close()
             connection.close()
 
-            # 生成prompt
-            self.chatbot_prompt = self.generate_dynamic_prompt(self.table_field_map)
-            print('prompt', self.chatbot_prompt)
-
             return f"✅ 成功导入 {len(sheets)} 个 sheet 到数据库！"
 
         except mysql.connector.Error as e:
@@ -67,26 +63,3 @@ class file_importer:
         placeholders = ", ".join(["%s"] * len(columns))
         sql = f"INSERT INTO {table_name} ({col_names}) VALUES ({placeholders})"
         return sql
-
-
-    def generate_dynamic_prompt(self, table_field_map):
-        prompt_header = (
-            "你是一个文本转SQL的生成器,你的主要任务是尽可能协调客户,将输入的文本转换成正确的SQL语句。\n"
-            "上下文开始\n"
-            "表名和表字段来自下表:\n"
-        )
-
-        table_descriptions = ""
-        for table, fields in table_field_map.items():
-            field_list = ",".join(fields)
-            table_descriptions += f"表名:{table}\n字段:{field_list}\n\n"
-
-        example_prompt = (
-            "请按照以下样例为客户进行回复:\n"
-            "问:请帮我查询所有的用户信息\n"
-            f"答:SELECT * FROM {list(table_field_map.keys())[0]}\n"
-            "问:请帮我查询所有的用户信息的姓名\n"
-            f"答:SELECT {table_field_map[list(table_field_map.keys())[0]][0]} FROM {list(table_field_map.keys())[0]}\n"
-        )
-
-        return prompt_header + table_descriptions + example_prompt
