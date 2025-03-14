@@ -12,6 +12,28 @@ class file_importer:
         }
         self.chatbot_prompt = None
         self.table_field_map = {}
+
+    def import_multiple_excels_to_mysql(self, file_paths):
+        success_files = []
+        failed_files = []
+
+        for file_path in file_paths:
+            print(f"📂 正在处理文件: {file_path}")
+            try:
+                result = self.import_excel_to_mysql(file_path)
+                print(result)
+                success_files.append(file_path)
+            except Exception as e:
+                print(f"⚠️ 文件 {file_path} 处理失败: {e}")
+                failed_files.append((file_path, str(e)))
+
+        msg = f"✅ 完成导入！成功 {len(success_files)} 个文件。"
+        if failed_files:
+            msg += f"\n❌ 失败 {len(failed_files)} 个文件：\n"
+            for f, error in failed_files:
+                msg += f"- {f} 错误: {error}\n"
+
+        return msg
         
     def import_excel_to_mysql(self, file_path):
         try:
