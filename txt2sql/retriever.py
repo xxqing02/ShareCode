@@ -69,17 +69,17 @@ class Retriever:
         prompt_header = """
         你是一个文本转SQL的生成器,你的主要任务是尽可能协调客户,将输入的文本转换成正确的SQL语句。
         上下文开始:
-        表名和表字段如下:
+        数据库中的表名和表字段如下:
         """
             
         table_descriptions = ""
         for table, fields in table_field_map.items():
             field_list = ", ".join(fields)
-            table_descriptions += f"表名：{table}\n字段：{field_list}\n\n"
+            table_descriptions += f"表名:{table}\n字段:{field_list}\n\n"
 
         if table_field_map:
             example_prompt = """
-            请按照以下样例为客户进行回复,注意仅生成SQL代码,禁止添加解释和格式化文本:
+            请按照以下样例为客户进行回复:
             问:请帮我查询所有的用户信息
             答:SELECT * FROM User
             问:请帮我查询所有的用户的用户名和邮箱
@@ -88,7 +88,7 @@ class Retriever:
             答:SELECT username, email FROM User ORDER BY register_time DESC
             """
         else:
-            error_prompt = "未检索到相关表和字段信息,无法生成SQL"
+            error_prompt = "未检索到相关表和字段信息,无法生成SQL,请直接回复:无法生成SQL"
             status = False
             return error_prompt, status
 

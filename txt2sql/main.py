@@ -10,8 +10,22 @@ if __name__ == "__main__":
     with gr.Blocks(title="自然语言 SQL 查询系统") as demo:
         gr.Markdown("# 📝 自然语言数据库查询助手")
         gr.Markdown("### 输入自然语言查询需求，系统自动生成 SQL 并查询数据库\n### 或上传 Excel 文件导入数据库")
+
+        predefined_queries = [
+            "查询所有管理员的用户名",  # 单表查询
+            "查询所有用户的文章名称",  # 多表查询
+            "查询所有用户的住址",  # 语义模糊查询
+            "查询所有用户的爱好",  # 空字段查询
+        ]
+
         with gr.Row():
-            nl_input = gr.Textbox(label="自然语言查询", placeholder="例如：查询所有管理员的用户名")
+            nl_input = gr.Dropdown(
+                label="自然语言查询",
+                choices=predefined_queries,
+                allow_custom_value=True,  # 允许用户输入自定义查询
+                interactive=True
+            )
+
             search_btn = gr.Button("🔍 查询")
 
         with gr.Row():
@@ -33,4 +47,6 @@ if __name__ == "__main__":
             outputs=[upload_result_output]
         )
 
-    demo.launch(server_name="127.0.0.1", server_port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860)
+
+    # python txt2sql\main.py --server_name 0.0.0.0 --server_port 7860

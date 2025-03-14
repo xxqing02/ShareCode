@@ -35,20 +35,22 @@ class chat:
         print(f"SQL Suggestion: {sql_suggestion}")
         if status:
             sql_suggestion = self.extract_sql(sql_suggestion)
-        print(f"SQL Suggestion(extracted): {sql_suggestion}")
-        query_result = self.query_select.sql_query(sql_suggestion) # 执行SQL返回结果
+            print(f"SQL Suggestion(extracted): {sql_suggestion}")
+            query_result = self.query_select.sql_query(sql_suggestion) # 执行SQL返回结果
 
-        if query_result:
-            headers = query_result[0].keys() if isinstance(query_result[0], dict) else []
-            rows = [[row[col] for col in headers] for row in query_result]
-            md_table = "| " + " | ".join(headers) + " |\n"
-            md_table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
-            for row in rows:
-                md_table += "| " + " | ".join(str(cell) for cell in row) + " |\n"
+            if query_result:
+                headers = query_result[0].keys() if isinstance(query_result[0], dict) else []
+                rows = [[row[col] for col in headers] for row in query_result]
+                md_table = "| " + " | ".join(headers) + " |\n"
+                md_table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+                for row in rows:
+                    md_table += "| " + " | ".join(str(cell) for cell in row) + " |\n"
 
-            return sql_suggestion, md_table
+                return sql_suggestion, md_table
+            else:
+                return sql_suggestion, "⚠️ 没有查询到数据或执行失败！"
         else:
-            return sql_suggestion, "⚠️ 没有查询到数据或执行失败！"
+            return sql_suggestion, "❌ 生成SQL失败！"
 
     @staticmethod
     def extract_sql(text):
@@ -56,7 +58,6 @@ class chat:
         if sql_matches:
             return sql_matches[0].strip() 
         else:
-            sql_match = re.search(r"(SELECT\s+.*?;)", text, re.DOTALL | re.IGNORECASE)
-            return sql_match.group(1).strip() if sql_match else None
+            return text
 
 
