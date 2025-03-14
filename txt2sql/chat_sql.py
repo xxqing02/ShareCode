@@ -15,7 +15,6 @@ class chat:
     # OpenAI 调用逻辑（生成 SQL）
     def chat_with_4o(self, message, prompt):
         try:
-            print(message,'message')
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
@@ -40,7 +39,6 @@ class chat:
         table_and_field = self.query_select.get_tables_and_fields()
         chatbot_prompt = self.query_select.generate_dynamic_prompt(table_and_field)
         sql_suggestion = self.chat_with_4o(nl_query, chatbot_prompt)
-        print(sql_suggestion,'sql')
 
         # 2. 执行 SQL 查询
         query_result = self.query_select.sql_query(sql_suggestion)

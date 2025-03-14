@@ -25,21 +25,14 @@ class Retriever:
             )
 
             if connection.is_connected():
-                print("✅ 数据库连接成功！")
-
                 cursor = connection.cursor()
                 cursor.execute(query)
-
                 # 获取列名
                 columns = [col[0] for col in cursor.description]
-
                 # 获取结果
                 rows = cursor.fetchall()
-
                 # 结构化为 list[dict]
                 result = [dict(zip(columns, row)) for row in rows]
-
-                # 关闭
                 cursor.close()
                 connection.close()
 
@@ -60,14 +53,10 @@ class Retriever:
             )
 
             if connection.is_connected():
-                print("✅ 数据库连接成功！")
-
                 cursor = connection.cursor()
-
                 # 获取所有表名
                 cursor.execute("SHOW TABLES;")
                 tables = cursor.fetchall()
-
                 result = {}
 
                 for table in tables:
@@ -107,23 +96,21 @@ class Retriever:
             field_list = ", ".join(fields)
             table_descriptions += f"表名：{table}\n字段：{field_list}\n\n"
 
-        # 3. 示例对话，基于表结构动态生成（用第一个表做例子）
         if table_field_map:
-            first_table = list(table_field_map.keys())[0]
-            first_fields = table_field_map[first_table]
-
-            example_prompt = (
-                "请按照以下样例为客户进行回复：\n\n"
-                f"问：请帮我查询所有的{first_table}信息\n"
-                f"答：SELECT * FROM {first_table};\n\n"
-                f"问：请帮我查询所有的{first_table}信息的{first_fields[0]}\n"
-                f"答：SELECT {first_fields[0]} FROM {first_table};\n\n"
-            )
+        #     first_table = list(table_field_map.keys())[0]
+        #     first_fields = table_field_map[first_table]
+            example_prompt = """
+            请按照以下样例为客户进行回复，注意仅生成 SQL 代码，不要添加解释或格式化文本：
+            问:请帮我查询所有的用户信息
+            答:SELECT * FROM User
+            问:请帮我查询所有的用户的用户名和邮箱
+            答:SELECT username, email FROM User
+            问:请帮我查询所有的用户的用户名和邮箱，按照注册时间降序排列
+            答:SELECT username, email FROM User ORDER BY register_time DESC
+            """
         else:
-            example_prompt = "（无表结构，无法提供示例）"
+            example_prompt = "error"
 
-        # 4. 合并生成完整 prompt
         final_prompt = prompt_header + table_descriptions + example_prompt
 
         return final_prompt
-
