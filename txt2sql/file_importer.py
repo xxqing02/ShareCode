@@ -1,6 +1,5 @@
 import pandas as pd
 import mysql.connector
-from mysql.connector import Error
 
 class file_importer:
     def __init__(self):

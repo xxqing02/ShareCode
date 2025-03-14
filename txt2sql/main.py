@@ -1,5 +1,5 @@
 import gradio as gr
-from chat_sql import chat
+from chater import chat
 from file_importer import file_importer
 
 if __name__ == "__main__":

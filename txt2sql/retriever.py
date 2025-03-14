@@ -1,7 +1,5 @@
 import mysql.connector
 from mysql.connector import Error
-import json
-
 
 class Retriever:
     def __init__(self):     
@@ -81,7 +79,7 @@ class Retriever:
 
         if table_field_map:
             example_prompt = """
-            请按照以下样例为客户进行回复,注意仅生成SQL代码,不要添加解释或格式化文本:
+            请按照以下样例为客户进行回复,注意仅生成SQL代码,禁止添加解释和格式化文本:
             问:请帮我查询所有的用户信息
             答:SELECT * FROM User
             问:请帮我查询所有的用户的用户名和邮箱
@@ -94,6 +92,7 @@ class Retriever:
             status = False
             return error_prompt, status
 
+        status = True
         final_prompt = prompt_header + table_descriptions + example_prompt
 
-        return final_prompt
+        return final_prompt, status

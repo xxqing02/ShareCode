@@ -1,8 +1,7 @@
 import openai
 from key import api_key, base
-from query_select import Retriever  
-from file_importer import file_importer  # 将excel存入mysql
-
+from retriever import Retriever  
+import re
 
 class chat:
     def __init__(self):
@@ -31,11 +30,14 @@ class chat:
 
     def natural_language_query(self, nl_query):
         table_and_field = self.query_select.get_tables_and_fields()  # 获取表和字段
-        chatbot_prompt = self.query_select.generate_dynamic_prompt(table_and_field)
+        chatbot_prompt,status = self.query_select.generate_dynamic_prompt(table_and_field)
         sql_suggestion = self.chat_with_4o(nl_query, chatbot_prompt)
+        print(f"SQL Suggestion: {sql_suggestion}")
+        if status:
+            sql_suggestion = self.extract_sql(sql_suggestion)
+        print(f"SQL Suggestion(extracted): {sql_suggestion}")
         query_result = self.query_select.sql_query(sql_suggestion) # 执行SQL返回结果
 
-        
         if query_result:
             headers = query_result[0].keys() if isinstance(query_result[0], dict) else []
             rows = [[row[col] for col in headers] for row in query_result]
@@ -47,3 +49,14 @@ class chat:
             return sql_suggestion, md_table
         else:
             return sql_suggestion, "⚠️ 没有查询到数据或执行失败！"
+
+    @staticmethod
+    def extract_sql(text):
+        sql_matches = re.findall(r"```sql\s*(.*?)\s*```", text, re.DOTALL)
+        if sql_matches:
+            return sql_matches[0].strip() 
+        else:
+            sql_match = re.search(r"(SELECT\s+.*?;)", text, re.DOTALL | re.IGNORECASE)
+            return sql_match.group(1).strip() if sql_match else None
+
+
