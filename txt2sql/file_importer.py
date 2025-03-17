@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import mysql.connector
 
 class file_importer:
@@ -58,9 +59,14 @@ class file_importer:
                 cursor.execute(f"DROP TABLE IF EXISTS `{table_name}`")
                 cursor.execute(create_table_sql)
 
-                for _, row in df.iterrows():
+                # for _, row in df.iterrows():
+                #     insert_sql = self.generate_insert_sql(table_name, df.columns)
+                #     cursor.execute(insert_sql, tuple(row))
+                    
+                if not df.empty:
+                    data = df.where(pd.notna(df), None).values.tolist()
                     insert_sql = self.generate_insert_sql(table_name, df.columns)
-                    cursor.execute(insert_sql, tuple(row))
+                    cursor.executemany(insert_sql, data)
 
             connection.commit()
             cursor.close()
