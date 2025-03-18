@@ -7,8 +7,8 @@ from chater import chat
 import pandas as pd
 
 # 设置目录路径
-UPLOAD_DIR = "./uploads/"
-PROCESSED_DIR = "./processed/"
+UPLOAD_DIR = "./excel_split/uploads/"
+PROCESSED_DIR = "./excel_split/processed/"
 
 # 确保目录存在
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -31,21 +31,28 @@ def process(file_paths, processed_files_state):
     excel_files = glob.glob(os.path.join(UPLOAD_DIR, '*.xlsx')) + glob.glob(os.path.join(UPLOAD_DIR, '*.xls'))
     print(excel_files)
     for file in excel_files:
-        file_name = os.path.basename(file)  # 获取输入文件的文件名
-        new_file_name = f"new_{file_name}"  # 在文件名中加上 'new' 后缀
-        output_file = os.path.join(PROCESSED_DIR, new_file_name)
-        data = read_excel_to_list(file)
-        result = chater.chat_with_4o(data)
-        df = pd.DataFrame({
-            'Data': data,
-            'Result': result
-        })
-        df.to_excel(output_file, index=True)
+        status = False
+        while not status:
+            file_name = os.path.basename(file)  # 获取输入文件的文件名
+            new_file_name = f"new_{file_name}"  # 在文件名中加上 'new' 后缀
+            output_file = os.path.join(PROCESSED_DIR, new_file_name)
+            data = read_excel_to_list(file)
+            result = chater.chat_with_4o(data)
+            if len(data) == len(result):
+                status = True
+            else:
+                continue
+            df = pd.DataFrame({
+                'Data': data,
+                'Result': result
+                })
+            df.to_excel(output_file, index=False)
         delete_file(file)
 
     # 更新处理后的文件列表
     processed_files_state = get_processed_files()
     return "Finish", processed_files_state
+
 
 
 def delete_file(file_path):
@@ -61,23 +68,25 @@ def get_processed_files():
     return [os.path.join(PROCESSED_DIR, f) for f in os.listdir(PROCESSED_DIR)]
 
 
+# 展示选中文件的部分处理结果
 def show_partial_results(selected_file):
-    if not selected_file:
-        return None  # 如果没有选中文件，返回空值
+    if not selected_file or selected_file == "请选择文件":  # 如果没有选中文件或选择了空选项
+        return None, gr.update(visible=False)  # 隐藏展示窗口
     try:
         # 读取选中的 Excel 文件
         df = pd.read_excel(selected_file)
         # 提取前 5 行作为部分结果
         partial_results = df.head(5)
-        return partial_results
+        return partial_results, gr.update(visible=True)  # 显示展示窗口
     except Exception as e:
         print(f"读取文件失败: {e}")
-        return None
+        return None, gr.update(visible=False)  # 隐藏展示窗口
+
 
 # 创建 Gradio 界面
 with gr.Blocks() as demo:
     gr.Markdown("# 文件上传与下载系统")
-    gr.Markdown("请在左边上传文件，右边下载处理后的文件")
+    gr.Markdown("左边上传文件，右边下载处理后的文件")
 
     # 状态变量：存储处理后的文件列表
     processed_files_state = gr.State([])
@@ -95,8 +104,8 @@ with gr.Blocks() as demo:
             # 文件上传后触发处理函数
             file_upload.upload(
                 process,
-                inputs=[file_upload, processed_files_state],
-                outputs=[output_text, processed_files_state]
+                inputs=[file_upload, processed_files_state],  # 明确指定输入参数
+                outputs=[output_text, processed_files_state]  # 明确指定输出参数
             )
 
         # 右侧区域：展示处理后的文件
@@ -112,33 +121,34 @@ with gr.Blocks() as demo:
                 inputs=processed_files_state,
                 outputs=processed_files
             )
+
             # 添加选项框：选择处理后的文件
             file_dropdown = gr.Dropdown(
                 label="选择处理后的文件",
-                choices=[],  # 初始为空
+                choices=["请选择文件"],  # 初始为空选项
                 interactive=True
             )
 
             # 添加展示窗口：展示选中文件的部分处理结果
             partial_results_display = gr.Dataframe(
                 label="部分处理结果",
-                interactive=False
+                interactive=False,
+                visible=False  # 初始状态为隐藏
             )
 
             # 动态更新选项框的内容
             processed_files_state.change(
-                lambda files: gr.update(choices=files),
+                lambda files: gr.update(choices=["请选择文件"] + files),  # 增加空选项
                 inputs=processed_files_state,
                 outputs=file_dropdown
             )
 
-            # 选项框选择文件后，展示部分处理结果
+            # 选项框选择文件后，展示部分处理结果，并控制展示窗口的可见性
             file_dropdown.change(
                 show_partial_results,
                 inputs=file_dropdown,
-                outputs=partial_results_display
+                outputs=[partial_results_display, partial_results_display]
             )
 
 # 启动应用
 demo.launch()
-
