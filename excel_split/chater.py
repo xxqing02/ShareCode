@@ -30,7 +30,11 @@ class chat:
                 stop=None
             )
             result = response.choices[0].message.content
-            return result
+            lines = result.strip().split('\n')
+
+            # 去除编号和多余空白
+            result_list = [line.split('. ', 1)[-1].strip() for line in lines]
+            return result_list
         except Exception as e:
             return f"❌ OpenAI 生成 SQL 失败：{e}"
         
