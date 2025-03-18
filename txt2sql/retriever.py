@@ -67,44 +67,48 @@ class Retriever:
             return None
 
 
-    def generate_dynamic_prompt(self, table_field_map):
-        prompt_header = """
-        You are an SQL query generator that converts natural language requests into accurate SQL statements. Your primary goal is to assist users by generating correct and efficient SQL queries based on their requests.
-        
-        Context:
-        The database contains the following tables and fields:
-        """
-            
-        table_descriptions = ""
-        for table, fields in table_field_map.items():
-            field_list = ", ".join(fields)
-            table_descriptions += f"Table Name: {table}\nFields: {field_list}\n\n"
+    def get_foreign_key_map(self):
+        try:
+            connection = mysql.connector.connect(
+                host=self.db_host,
+                port=self.db_port,
+                user=self.db_user,
+                password=self.db_password,
+                database=self.db_name
+            )
 
-        if table_field_map:
-            example_prompt = """
-            Please follow the examples below to respond to user requests:
-            
-            User: Retrieve all user information.
-            Response: SELECT * FROM User;
-            
-            User: Retrieve all usernames and emails of users.
-            Response: SELECT username, email FROM User;
-            
-            User: Retrieve all usernames and emails of users, sorted by registration time in descending order.
-            Response: SELECT username, email FROM User ORDER BY register_time DESC;
-            
-            Guidelines:
-            - Always use valid SQL syntax.
-            - If a field or table is not explicitly mentioned, inferring the relevant option based on common database structures is strictly forbidden.
-            - Ensure queries are optimized and avoid unnecessary clauses.
-            """
-        else:
-            error_prompt = "No table or field information found. Unable to generate SQL. Please respond with: 'Unable to generate SQL due to missing table and field details.'"
-            status = False
-            return error_prompt, status
+            if connection.is_connected():
+                cursor = connection.cursor(dictionary=True)
+                query = """
+                    SELECT 
+                        TABLE_NAME AS table_name,
+                        COLUMN_NAME AS column_name,
+                        REFERENCED_TABLE_NAME AS referenced_table,
+                        REFERENCED_COLUMN_NAME AS referenced_column
+                    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                    WHERE TABLE_SCHEMA = %s AND REFERENCED_TABLE_NAME IS NOT NULL;
+                """
+                cursor.execute(query, (self.db_name,))
+                foreign_keys = cursor.fetchall()
 
-        status = True
-        final_prompt = prompt_header + table_descriptions + example_prompt
+                foreign_key_map = {}
+                for row in foreign_keys:
+                    table = row['table_name']
+                    column = row['column_name']
+                    ref_table = row['referenced_table']
+                    ref_column = row['referenced_column']
+                    
+                    if table not in foreign_key_map:
+                        foreign_key_map[table] = {}
+                    
+                    foreign_key_map[table][column] = (ref_table, ref_column)
+                
+                cursor.close()
+                connection.close()
+                return foreign_key_map
 
-        return final_prompt, status
+        except Error as e:
+            print(f"❌ 获取外键映射失败：{e}")
+            return None
+    
     
