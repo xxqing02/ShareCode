@@ -19,27 +19,32 @@ class Generator:
         Returns:
             sql (str): 生成的sql语句
         """
-        prompt = self._build_prediction_prompt(status, user_input, sql_input)
         
         try:
-            response = self.client.chat.completions.create(
-                model='gpt-4o',
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": user_input}
+            if status:
+                response = self.client.chat.completions.create(
+                    model='gpt-4o',
+                    messages=[
+                        {"role": "system", "content": prompt_json},
+                        {"role": "user", "content": user_input}
 
-                ],
-                max_tokens=512,
-                temperature=0.3,
-                top_p=1.0,
-                n=1
-            )
-            
-            sql = response.choices[0].message.content.strip()
-            
-            return sql
+                    ],
+                    max_tokens=512,
+                    temperature=0.3,
+                    top_p=1.0,
+                    n=1
+                )
+                sql = response.choices[0].message['content']
+                status = True
+
+            else:
+                sql = None
+                status = False
+            return sql, status
             
         except Exception as e:
+            sql = None
+            status = False            
             print(f"❌ generator 模块调用失败：{e}")
-            return
+            return sql, status
 

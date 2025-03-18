@@ -5,7 +5,7 @@ class Checker:
     def __init__(self):
         self.client = openai.OpenAI(api_key=gpt_key, base_url=gpt_base)
         
-    def predict_tables_and_fields(self, status, user_input, sql_input):
+    def check_sql(self, status, user_input, sql_input):
         """
         根据用户输入预测最可能使用的表和字段，并检查生成的SQL语句是否冗余，进行优化。
         
@@ -19,31 +19,33 @@ class Checker:
         """
         try:
             # 构建提示词
-            prompt = self._build_prediction_prompt(status, user_input, sql_input)
-            
-            # 调用GPT模型进行预测
-            response = self.client.chat.completions.create(
-                model='gpt-4o',
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": user_input}
-                ],
-                max_tokens=2048,
-                temperature=0.3,
-                top_p=1.0,
-                n=1
-            )
-            
-            # 解析预测结果
-            sql = response.choices[0].message.content.strip()
-            
-            return sql
+            if status:
+                prompt = self._build_check_prompt(status, user_input, sql_input)
+                
+                response = self.client.chat.completions.create(
+                    model='gpt-4o',
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": user_input}
+                    ],
+                    max_tokens=2048,
+                    temperature=0.3,
+                    top_p=1.0,
+                    n=1
+                )
+                
+                # 解析预测结果
+                sql = response.choices[0].message.content.strip()
+                
+                return sql, status
             
         except Exception as e:
+            sql = None
+            status = False
             print(f"❌ checker 模块调用失败：{e}")
-            return []
+            return sql, status
 
-    def _build_prediction_prompt(self, status, user_input, sql_input):
+    def _build_check_prompt(self, status, user_input, sql_input):
         """构建预测提示词"""
         
         if status:
@@ -67,4 +69,4 @@ if __name__ == "__main__":
     status = True
     user_input = "Find the total number of orders for each customer."
     sql_input = "SELECT customer_id, email , COUNT(order_id) AS total_orders FROM orders GROUP BY customer_id"
-    print(checker.predict_tables_and_fields(status, user_input, sql_input))
+    print(checker.check_sql(status, user_input, sql_input))
