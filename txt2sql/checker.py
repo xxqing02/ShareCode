@@ -1,6 +1,6 @@
 import openai
 from key import * 
-
+import re
 class Checker:
     def __init__(self):
         self.client = openai.OpenAI(api_key=gpt_key, base_url=gpt_base)
@@ -36,14 +36,15 @@ class Checker:
                 
                 # 解析预测结果
                 sql = response.choices[0].message.content.strip()
-                
+                sql = self.extract_sql(sql)
                 return sql, status
+
+            else:
+                return "", False
             
         except Exception as e:
-            sql = None
-            status = False
             print(f"❌ checker 模块调用失败：{e}")
-            return sql, status
+            return "", False
 
     def _build_check_prompt(self, status, user_input, sql_input):
         """构建预测提示词"""
@@ -64,6 +65,16 @@ class Checker:
             
         return prompt
     
+
+    @staticmethod
+    def extract_sql(text):
+        sql_matches = re.findall(r"```sql\s*(.*?)\s*```", text, re.DOTALL)
+        if sql_matches:
+            return sql_matches[0].strip() 
+        else:
+            return text
+        
+
 if __name__ == "__main__":
     checker = Checker()
     status = True

@@ -1,10 +1,10 @@
 import gradio as gr
-from chater import chat
 from file_importer import file_importer
 from prompter import Prompter
 from generator import Generator
 from checker import Checker
 from retriever import Retriever
+import pandas as pd
 
 predefined_queries = [
     "查询所有用户的用户名和注册日期",  # 单表查询
@@ -37,11 +37,61 @@ def query_from_excel(nl_query):
     # print(prediction)
     sql_suggestion,generator_status = generator.generate_sql(prompter_status,nl_query,prediction)
     # print(sql_suggestion)
-    query_result,checker_status = checker.check_sql(generator_status,nl_query,sql_suggestion)
-    return sql_suggestion,query_result
+    sql_result,checker_status = checker.check_sql(generator_status,nl_query,sql_suggestion)
+    query_result= retriever.sql_query(sql_result)
+    print("查询结果：",query_result)
+    query_result = sql_result_to_html(query_result)
+    return  sql_result, query_result
 
+def sql_result_to_html(sql_result):
+    """将 SQL 查询结果转换为 HTML 表格，并添加样式"""
+    if isinstance(sql_result, pd.DataFrame):
+        table_html = sql_result.to_html(index=False, escape=False)  # 生成 HTML 表格
+    elif isinstance(sql_result, list):
+        if not sql_result:
+            return "<p>查询无结果</p>"
+        headers = sql_result[0].keys()
+        rows = [list(row.values()) for row in sql_result]
+        df = pd.DataFrame(rows, columns=headers)
+        table_html = df.to_html(index=False, escape=False)
+    else:
+        return "<p>查询结果格式不支持</p>"
 
-
+    # 自定义表格样式
+    # 灰白风格表格样式
+    style = """
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8; /* 淡灰背景 */
+            color: #333; /* 深灰色文字 */
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th {
+            background-color: #666; /* 深灰色表头 */
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #eee; /* 斑马纹（浅灰色） */
+        }
+        tr:hover {
+            background-color: #ddd; /* 鼠标悬停时的颜色 */
+        }
+    </style>
+    """
+    return style + table_html
+    
 
 if __name__ == "__main__":
 
@@ -60,10 +110,10 @@ if __name__ == "__main__":
             search_btn = gr.Button("🔍 查询")
 
         with gr.Row():
-            sql_output = gr.Textbox(label="生成的SQL语句", lines=3)
-            query_result_output = gr.Markdown(label="查询结果")
+            sql_result = gr.Textbox(label="生成的SQL语句", lines=3)
+            query_result = gr.HTML(label="查询结果")
 
-        search_btn.click(fn=query_from_excel(nl_input), inputs=[nl_input], outputs=[sql_output, query_result_output])
+        search_btn.click(fn=query_from_excel, inputs=[nl_input], outputs=[sql_result, query_result])
 
         gr.Markdown("---")
         gr.Markdown("### 📥 Excel 文件上传导入数据库")

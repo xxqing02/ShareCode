@@ -61,13 +61,14 @@ class Prompter:
         prompt += """
         
         请根据用户的输入,预测最可能使用的表和字段.请以JSON格式返回结果,格式如下:
-        {
-            "possible_tables": ["table1", "table2"],
-            "possible_fields": {
-                "table1": ["field1", "field2"],
-                "table2": ["field3"]
-            }
-        }
+        {"possible_tables": ["table1", "table2"],"possible_fields": {"table1": ["field1", "field2"],"table2": ["field3"]}}
         只返回JSON格式的结果，不要包含其他文字。
         """
         return prompt
+    
+if __name__ == "__main__":
+    prompter = Prompter()
+    retriever = Retriever()
+    table_field_map,retriever_status = retriever.get_tables_and_fields()
+    prediction = prompter._predict_schema(retriever_status,"查询所有用户的订单",table_field_map)
+    print(prediction)

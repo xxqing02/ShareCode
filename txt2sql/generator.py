@@ -2,6 +2,7 @@
 
 import openai
 from key import *
+import re
 
 class Generator: 
     def __init__(self):
@@ -29,12 +30,13 @@ class Generator:
                         {"role": "user", "content": user_input}
 
                     ],
-                    max_tokens=512,
+                    max_tokens=2048,
                     temperature=0.3,
                     top_p=1.0,
                     n=1
                 )
-                sql = response.choices[0].message['content']
+                sql = response.choices[0].message.content
+                sql = self.extract_sql(sql)
                 status = True
 
             else:
@@ -48,3 +50,11 @@ class Generator:
             print(f"❌ generator 模块调用失败：{e}")
             return sql, status
 
+
+    @staticmethod
+    def extract_sql(text):
+        sql_matches = re.findall(r"```sql\s*(.*?)\s*```", text, re.DOTALL)
+        if sql_matches:
+            return sql_matches[0].strip() 
+        else:
+            return text
