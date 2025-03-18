@@ -36,6 +36,7 @@ class Retriever:
             return None
     
     def get_tables_and_fields(self):
+        status = True
         try:
             connection = mysql.connector.connect(
                 host=self.db_host,
@@ -60,11 +61,12 @@ class Retriever:
 
                 cursor.close()
                 connection.close()
-                return result
+                return result,status
 
         except Error as e:
             print(f"❌ 获取表和字段信息失败：{e}")
-            return None
+            status = False
+            return None,status
 
 
     def get_foreign_key_map(self):

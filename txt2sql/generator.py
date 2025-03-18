@@ -3,7 +3,7 @@
 import openai
 from key import *
 
-class Generator:    
+class Generator: 
     def __init__(self):
         self.client = openai.OpenAI(api_key=gpt_key, base_url=gpt_base)
         
