@@ -52,11 +52,12 @@ class Checker:
         if status:
             prompt = f"""
             You are a database expert. Your task is to check whether the generated SQL statement contains any redundancy based on the user's input. 
-            If there is redundancy, you should optimize the SQL by removing the unnecessary parts.
+            If there is redundancy, you should optimize the SQL by removing the unnecessary parts(mysql 5.7 support).
+            Please return the optimized SQL statement.
             
             User's input: "{user_input}"
             Generated SQL statement: "{sql_input}"
-            Please return the optimized SQL statement.
+            Please return the optimized SQL statement and remove the code commenting in the SQL statement.
             """
         else:
             prompt = f"""

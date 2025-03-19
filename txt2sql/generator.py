@@ -20,7 +20,7 @@ class Generator:
         Returns:
             sql (str): 生成的sql语句
         """
-        
+        prompt_json =  prompt_json + "请按照mysql 5.7支持的语法生成sql语句"
         try:
             if status:
                 response = self.client.chat.completions.create(
