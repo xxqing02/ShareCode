@@ -1,5 +1,5 @@
 import gradio as gr
-from file_importer import file_importer
+from file_importer import ExcelToMySQL, db_config
 from prompter import Prompter
 from generator import Generator
 from checker import Checker
@@ -26,7 +26,7 @@ predefined_queries = [
     ]
 
 
-importer = file_importer()
+importer = ExcelToMySQL(db_config)
 
 def query_from_excel(nl_query):
     prompter = Prompter()
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         upload_result_output = gr.Textbox(label="导入结果", lines=2)
         upload_btn.click(
-            fn=lambda files: importer.import_multiple_excels_to_mysql([file.name for file in files]),
+            fn=lambda files: importer.import_excel_to_mysql([file for file in files]),
             inputs=[file_input],
             outputs=[upload_result_output]
         )
