@@ -21,6 +21,26 @@ class ExcelToMySQL:
             f"{db_config['host']}:{db_config['port']}/{db_config['database']}"
         )
 
+    def import_multiple_excels_to_mysql(self, files):
+        """
+        导入多个 Excel 文件到 MySQL 数据库
+        :param files: 文件路径列表
+        :return: 导入结果信息
+        """
+        results = []
+        for file in files:
+            try:
+                if isinstance(file, str):
+                    file_path = file
+                else:
+                    file_path = file.name
+                self.import_excel_to_mysql(file_path)
+                results.append(f"✅ 文件 {file_path} 导入成功")
+            except Exception as e:
+                results.append(f"❌ 文件 {file_path} 处理失败：{str(e)}")
+                logging.error(f"文件 {file_path} 处理失败：{str(e)}")
+        return "\n".join(results)
+
     def import_excel_to_mysql(self, file_path):
         """
         将 Excel 文件中的每个 sheet 导入到 MySQL 数据库中
@@ -48,18 +68,16 @@ class ExcelToMySQL:
                     logging.info(f"🛠️ 正在处理 sheet：{sheet} -> 表名：{table_name}")
 
                     # 写入 MySQL 数据库
-                    df.to_sql(name=table_name, con=self.engine, index=False, if_exists='replace')
-                    logging.info(f"✅ 成功导入 sheet：{sheet} 到表：{table_name}")
+                    df.to_sql(table_name, self.engine, if_exists='replace', index=False)
+                    logging.info(f"✅ sheet {sheet} 导入成功")
 
                 except Exception as e:
-                    logging.error(f"⚠️ Sheet {sheet} 导入失败：{e}")
-
-            logging.info(f"✅ 文件 {file_path} 处理完成！")
-            return f"成功导入 {len(sheet_names)} 个 sheet 到数据库。"
+                    logging.error(f"sheet {sheet} 处理失败：{str(e)}")
+                    raise
 
         except Exception as e:
-            logging.error(f"❌ 文件 {file_path} 处理失败：{e}")
-            return f"文件 {file_path} 处理失败：{e}"
+            logging.error(f"文件 {file_path} 处理失败：{str(e)}")
+            raise
 
 # 数据库配置
 db_config = {

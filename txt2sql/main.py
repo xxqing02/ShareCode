@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         upload_result_output = gr.Textbox(label="导入结果", lines=2)
         upload_btn.click(
-            fn=lambda files: importer.import_excel_to_mysql([file for file in files]),
+            fn=lambda files: importer.import_multiple_excels_to_mysql(files),
             inputs=[file_input],
             outputs=[upload_result_output]
         )
