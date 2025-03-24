@@ -2,17 +2,12 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, font
 import ctypes
-import time
 from threading import Thread, Event
 import sys
 import win32api
 import win32con
-import cv2
-from time import sleep
-from fake_mouse import fake_mouse
-from template_matching import template_match
 from auto_task import auto_task
-# 检查是否以管理员权限运行
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -34,7 +29,6 @@ if __name__ == "__main__":
 
 # 全局变量存储文件夹路径
 app_road = ""
-is_closed = False
 
 # 创建一个事件对象，用于线程间通信
 task_completed_event = Event()

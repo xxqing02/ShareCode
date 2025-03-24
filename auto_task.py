@@ -64,7 +64,7 @@ def auto_task():
         while attempt < max_attempts:
             mouse_controller.get_screenshot(screenshot_path)
             target_color = cv2.imread(screenshot_path)
-            template_color = cv2.imread(template_path)
+            template_color = cv2.imread(template3_path)
             
             if target_color is None or template_color is None:
                 attempt += 1
@@ -110,6 +110,7 @@ def auto_task():
 
         print(f'正在过滤结果')
         result=filter_result(result)
+        print("保存结果中")
         save_result(result)
 
         #  删除photo文件夹中的图片
