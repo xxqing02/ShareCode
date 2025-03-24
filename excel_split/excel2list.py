@@ -4,12 +4,12 @@ import pandas as pd
 
 def read_excel_to_list(file_path):
     """
-    读取 Excel 文件（.xlsx），返回第一列数据组成的列表
+    读取 Excel 文件（.xlsx），返回第一列数据组成的列表，跳过第一行
     :param file_path: Excel 文件路径
     :return: List，第一列的数据列表
     """
     try:
-        # 读取 Excel 文件
+        # 读取 Excel 文件，跳过第一行
         df = pd.read_excel(file_path)
         
         # 获取第一列数据并转换为列表
